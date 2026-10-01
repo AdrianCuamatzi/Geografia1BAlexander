@@ -45,14 +45,24 @@ nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(255,255,
 .tab{flex:1;border:0;background:none;font:inherit;font-size:11px;font-weight:700;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:1px}
 .tab i{font-style:normal;font-size:24px;transition:transform .3s cubic-bezier(.2,1.6,.4,1)}.tab.on{color:var(--p)}.tab.on i{transform:scale(1.25) translateY(-2px)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mq span{padding:0}.mq{white-space:normal;text-align:center}}
+.es{font:inherit;font-size:14px;font-weight:700;border:0;border-radius:20px;padding:7px 14px;background:#16a34a;color:#fff}
+.rs ul,.card ul{margin:8px 0 4px;padding-left:20px;font-size:14px}.rs li,.card li{margin-bottom:6px}.rs a,.lk a,.card li a{color:var(--p)}.lk{font-size:13px;margin:6px 16px}.rs .note{margin:6px 0}
+.duo{display:grid;grid-template-columns:1fr 1.5fr;gap:8px;padding:10px}.duo img{width:100%;height:130px;object-fit:cover;border-radius:12px;border:1px solid #dde}.duo iframe{width:100%;height:130px;border:0;border-radius:12px}
+.sec h3{margin:0;padding:12px 16px 0;font-size:18px}
+.wr{position:relative;width:290px;height:290px;margin:14px auto 18px}
+#whl{position:relative;width:290px;height:290px;border-radius:50%;border:8px solid #fff;box-shadow:0 10px 28px rgba(79,70,229,.35);transition:transform 4.5s cubic-bezier(.17,.67,.12,.99)}
+#whl span{position:absolute;left:50%;top:50%;font-size:30px;line-height:1}
+.pt{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:32px;color:#ef4444;z-index:2}
+.btn.big{display:block;margin:0 auto 16px;padding:14px 28px;font-size:18px;background:linear-gradient(135deg,#f59e0b,#ef4444)}.btn:disabled{opacity:.6}
 </style></head><body>
 <header class="top"><div class="mq" role="heading" aria-level="1" aria-label="Mi tarea de Noticias Geográficas Secundaria N68 - 1B Alexander"><span>🌎 Mi tarea de Noticias Geográficas Secundaria N68 - 1B Alexander 🌋🌀🌍</span></div>
-<label class="sb">🔍<input id="q" type="search" placeholder="Buscar una noticia, país o fenómeno…" autocomplete="off"></label></header>
-<section class="view on" id="v0"><h2>Noticias por país</h2><div id="fl"></div><div id="ls"></div></section>
+<label class="sb">🔍<input id="q" type="search" placeholder="Buscar una noticia, país o fenómeno…" autocomplete="off" enterkeyhint="search"></label></header>
+<section class="view on" id="v0"><h2>Noticias por país</h2><div id="web"></div><div id="fl"></div><div id="ls"></div></section>
 <section class="view" id="v1"><h2>Mapa mundial</h2><div id="mp"></div><p class="note">Toca un punto para ver la noticia y su liga.</p></section>
 <section class="view" id="v2"><h2>Tipos de fenómenos</h2><div class="grid" id="ct"></div></section>
-<section class="view" id="v3"><h2>Conoce el país</h2><select id="sp"></select><div id="pi"></div></section>
-<nav><button class="tab on"><i>📰</i>Noticias</button><button class="tab"><i>🗺️</i>Mapa</button><button class="tab"><i>🧭</i>Tipos</button><button class="tab"><i>🌐</i>País</button></nav>
+<section class="view" id="v3"><h2>Información general</h2><select id="sp"></select><div id="pi"></div></section>
+<section class="view" id="v4"><h2>Ruleta de países</h2><div id="rl"></div></section>
+<nav><button class="tab on"><i>📰</i>Noticias</button><button class="tab"><i>🗺️</i>Mapa</button><button class="tab"><i>🧭</i>Tipos</button><button class="tab"><i>🌐</i>Info país</button><button class="tab"><i>🎡</i>Ruleta</button></nav>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),u=s=>/^https?:\/\//.test(s||'')?esc(s):'#';
@@ -72,16 +82,16 @@ async function carga(){
  $('#ls').innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div><p class="note">Buscando noticias de la NASA y el USGS…</p>';
  const out=[];
  await Promise.allSettled([
- (async()=>{const j=await jget('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson');j.features.sort((a,b)=>b.properties.mag-a.properties.mag).slice(0,15).forEach(f=>{const p=f.properties,c=f.geometry.coordinates;out.push({cat:'terremotos',lat:c[1],lon:c[0],f:new Date(p.time),url:p.url,fuente:'USGS',titulo:'Tiembla con magnitud '+p.mag.toFixed(1)+' ('+p.place+')'})})})(),
- (async()=>{const j=await jget('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=20&limit=150'),n={};j.events.forEach(e=>{const k=MP[e.categories[0].id]||'otros';if((n[k]=(n[k]||0)+1)>6)return;const g=e.geometry[e.geometry.length-1];let c=g.coordinates;while(Array.isArray(c[0]))c=c[0];out.push({cat:k,lat:c[1],lon:c[0],f:new Date(g.date),url:(e.sources&&e.sources[0]&&e.sources[0].url)||e.link,fuente:'NASA EONET',titulo:PRE[k]+': '+e.title+(g.magnitudeUnit==='kts'&&g.magnitudeValue?' (vientos de '+g.magnitudeValue+' nudos)':'')})})})(),
+ (async()=>{const j=await jget('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson');j.features.sort((a,b)=>b.properties.mag-a.properties.mag).slice(0,15).forEach(f=>{const p=f.properties,c=f.geometry.coordinates;out.push({cat:'terremotos',lat:c[1],lon:c[0],f:new Date(p.time),url:p.url,fuente:'USGS',mag:p.mag.toFixed(1),titulo:'Tiembla con magnitud '+p.mag.toFixed(1)+' ('+p.place+')'})})})(),
+ (async()=>{const j=await jget('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=20&limit=150'),n={};j.events.forEach(e=>{const k=MP[e.categories[0].id]||'otros';if((n[k]=(n[k]||0)+1)>6)return;const g=e.geometry[e.geometry.length-1];let c=g.coordinates;while(Array.isArray(c[0]))c=c[0];out.push({cat:k,lat:c[1],lon:c[0],f:new Date(g.date),url:(e.sources&&e.sources[0]&&e.sources[0].url)||e.link,fuente:'NASA EONET',nom:e.title.replace(/,.*$/,''),titulo:PRE[k]+': '+e.title+(g.magnitudeUnit==='kts'&&g.magnitudeValue?' (vientos de '+g.magnitudeValue+' nudos)':'')})})})(),
  (async()=>{const j=await jget('https://ssd-api.jpl.nasa.gov/fireballs.api?limit=8'),ix=k=>j.fields.indexOf(k);j.data.forEach(r=>{const la=+r[ix('lat')]*(r[ix('lat-dir')]==='S'?-1:1),lo=+r[ix('lon')]*(r[ix('lon-dir')]==='W'?-1:1);if(isNaN(la+lo))return;out.push({cat:'meteoritos',lat:la,lon:lo,f:new Date(r[0].replace(' ','T')+'Z'),url:'https://cneos.jpl.nasa.gov/fireballs/',fuente:'NASA JPL',titulo:'Bola de fuego (bólido) detectada en la atmósfera, con energía radiada de '+r[ix('energy')]+' × 10¹⁰ julios'})})})()
  ]);
  if(!out.length){$('#ls').innerHTML='<p class="note">No se pudieron cargar las noticias. Revisa tu conexión.</p><button class="btn" style="margin:0 16px" onclick="carga()">Reintentar</button>';return}
  await pool(out,geo);
- D=out.sort((a,b)=>b.f-a.f);lista();cats();selPais();pintar();
+ D=out.sort((a,b)=>b.f-a.f);D.forEach((x,i)=>x.id=i);lista();cats();selPais();pintar();
 }
 const vis=()=>{const t=q.trim().toLowerCase();return D.filter(x=>(!fc||x.cat===fc)&&(!t||(x.titulo+' '+x.pais+' '+CM[x.cat][2]).toLowerCase().includes(t)))};
-function card(x,i){const c=CM[x.cat];return '<article class="nw" style="--c:'+c[3]+';--i:'+Math.min(i,12)+'"><div class="ic">'+c[1]+'</div><div><h3><span>'+(i+1)+'.</span> '+esc(x.pais)+': '+esc(x.titulo)+'</h3><p class="mt">'+c[2]+' · '+fecha(x.f)+' · '+esc(x.fuente)+'</p><div class="ac"><a href="'+u(x.url)+'" target="_blank" rel="noopener">Leer noticia ↗</a>'+(x.cc?'<button onclick="verPais(\''+x.cc+'\')">Ver país</button>':'')+'</div></div></article>'}
+function card(x,i){const c=CM[x.cat];return '<article class="nw" style="--c:'+c[3]+';--i:'+Math.min(i,12)+'"><div class="ic">'+c[1]+'</div><div><h3><span>'+(i+1)+'.</span> '+esc(x.pais)+': '+esc(x.titulo)+'</h3><p class="mt">'+c[2]+' · '+fecha(x.f)+' · '+esc(x.fuente)+'</p><div class="ac"><button class="es" onclick="esp(this,'+x.id+')">📖 Leer en español</button><a href="'+u(x.url)+'" target="_blank" rel="noopener">Fuente original ↗</a>'+(x.cc?'<button onclick="verPais(\''+x.cc+'\')">Ver país</button>':'')+'</div><div class="rs"></div></div></article>'}
 function lista(){const a=vis();
  $('#fl').innerHTML=fc?'<button class="chip" onclick="filtra(\'\')">'+CM[fc][1]+' '+CM[fc][2]+' ✕</button><p class="def">'+CM[fc][4]+'</p>':'';
  $('#ls').innerHTML=a.length?a.map(card).join(''):'<p class="note">No hay noticias con esos criterios.</p>'}
@@ -89,32 +99,85 @@ function cats(){$('#ct').innerHTML=C.map((c,i)=>'<button class="cat" style="--c:
 function filtra(k){fc=k;lista();pintar();goTab(0)}
 function pintar(){if(!M)return;capa.clearLayers();const g={};vis().forEach(x=>{(g[x.pais]=g[x.pais]||[]).push(x)});
  Object.entries(g).forEach(([p,a])=>{const x=a[0];
-  L.circleMarker([x.lat,x.lon],{radius:9,color:'#fff',weight:2,fillColor:CM[x.cat][3],fillOpacity:.95}).bindPopup('<div class="pp"><b>'+esc(p)+'</b><ul>'+a.map(y=>'<li>'+CM[y.cat][1]+' <a href="'+u(y.url)+'" target="_blank" rel="noopener">'+esc(y.titulo)+'</a></li>').join('')+'</ul>'+(x.cc?'<button onclick="verPais(\''+x.cc+'\')">Ver información del país</button>':'')+'</div>',{maxWidth:260}).addTo(capa)})}
+  L.circleMarker([x.lat,x.lon],{radius:9,color:'#fff',weight:2,fillColor:CM[x.cat][3],fillOpacity:.95}).bindPopup('<div class="pp"><b>'+esc(p)+'</b><ul>'+a.map(y=>'<li>'+CM[y.cat][1]+' '+esc(y.titulo)+'<br><button class="es" onclick="esp(this,'+y.id+')">📖 Leer en español</button><div class="rs"></div></li>').join('')+'</ul>'+(x.cc?'<button onclick="verPais(\''+x.cc+'\')">Ver información del país</button>':'')+'</div>',{maxWidth:260}).addTo(capa)})}
 function mapa(){if(typeof L==='undefined'){$('#mp').innerHTML='<p class="note">No se pudo cargar el mapa.</p>';return}
- if(!M){M=L.map('mp',{worldCopyJump:true,minZoom:1}).setView([20,0],2);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:8}).addTo(M);capa=L.layerGroup().addTo(M)}
+ if(!M){M=L.map('mp',{worldCopyJump:true,minZoom:1}).setView([20,0],2);const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(M),sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri',maxZoom:17});L.control.layers({'Calles':osm,'Satélite':sa}).addTo(M);capa=L.layerGroup().addTo(M)}
  setTimeout(()=>M.invalidateSize(),60);pintar()}
-function selPais(){const m={};D.forEach(x=>{if(x.cc)m[x.cc]=x.pais});
+function selPais(){const m={};POOL.forEach(c=>m[c[0]]=c[1]);D.forEach(x=>{if(x.cc)m[x.cc]=x.pais});
  $('#sp').innerHTML=Object.entries(m).sort((a,b)=>a[1].localeCompare(b[1],'es')).map(([c,n])=>'<option value="'+c+'">'+esc(n)+'</option>').join('');if(cur)$('#sp').value=cur}
 function verPais(cc){cur=cc;$('#sp').value=cc;goTab(3)}
 $('#sp').onchange=()=>{cur=$('#sp').value;pais(cur)};
+const POOL=[['MX','México'],['US','Estados Unidos'],['CA','Canadá'],['BR','Brasil'],['AR','Argentina'],['CL','Chile'],['PE','Perú'],['CO','Colombia'],['VE','Venezuela'],['EC','Ecuador'],['BO','Bolivia'],['UY','Uruguay'],['CU','Cuba'],['CR','Costa Rica'],['ES','España'],['FR','Francia'],['DE','Alemania'],['IT','Italia'],['GB','Reino Unido'],['PT','Portugal'],['IS','Islandia'],['NO','Noruega'],['GR','Grecia'],['TR','Turquía'],['RU','Rusia'],['CN','China'],['JP','Japón'],['KR','Corea del Sur'],['IN','India'],['TH','Tailandia'],['ID','Indonesia'],['PH','Filipinas'],['SA','Arabia Saudita'],['EG','Egipto'],['MA','Marruecos'],['NG','Nigeria'],['KE','Kenia'],['ZA','Sudáfrica'],['AU','Australia'],['NZ','Nueva Zelanda']];
+const RC='https://restcountries.com/v3.1/alpha/',n1=x=>x.toLocaleString('es-MX',{maximumFractionDigits:1});
+const CT={Africa:'África',Antarctica:'Antártida',Europe:'Europa','North America':'América del Norte','South America':'América del Sur',Oceania:'Oceanía'},cont=a=>(a||['—']).map(x=>CT[x]||x).join(', ');
+let LN=null,CN=null;try{LN=new Intl.DisplayNames(['es'],{type:'language'});CN=new Intl.DisplayNames(['es'],{type:'currency'})}catch(e){}
+const idiomas=o=>o?Object.keys(o).map(k=>{try{const t=LN.of(k);return t&&t!==k?t:o[k]}catch(e){return o[k]}}).join(', '):'—';
+const monedas=o=>o?Object.keys(o).map(k=>{try{return CN.of(k)||o[k].name}catch(e){return o[k].name}}).join(', '):'—';
+const flag=c=>String.fromCodePoint(...[...c].map(ch=>127397+ch.charCodeAt(0)));
+const cons=x=>x.cat==='terremotos'?'terremoto sismo '+x.pais+' magnitud '+x.mag:CM[x.cat][2]+' '+x.pais+' '+(x.nom||'');
+const gn=q=>'https://news.google.com/search?q='+encodeURIComponent(q)+'&hl=es-419&gl=MX&ceid=MX:es-419';
+async function webnews(q){const j=await jget('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=es-419&gl=MX&ceid=MX:es-419'));if(j.status!=='ok'||!j.items.length)throw 0;return j.items.slice(0,5)}
+const lis=a=>'<ul>'+a.map(i=>'<li><a href="'+u(i.link)+'" target="_blank" rel="noopener">'+esc(i.title)+'</a></li>').join('')+'</ul>';
+const ng=q=>'https://www.google.com/search?q='+encodeURIComponent('site:nationalgeographic.com.es '+q);
+async function esp(b,id){const q=cons(D[id]),box=b.parentNode.querySelector('.rs')||b.parentNode.nextElementSibling;
+ box.innerHTML='<p class="note">Buscando noticias en español…</p>';let h;
+ try{h=lis(await webnews(q))}catch(e){h='<p class="note">No se pudo traer la lista aquí. Usa estos enlaces:</p>'}
+ box.innerHTML=h+'<p class="lk" style="margin:4px 0"><a href="'+gn(q)+'" target="_blank" rel="noopener">Google Noticias ↗</a> · <a href="'+ng(q)+'" target="_blank" rel="noopener">National Geographic en español ↗</a></p>'}
+async function buscaWeb(){const t=q.trim();if(!t)return;goTab(0);const w=$('#web'),qq=/volc|huraca|huracá|sismo|terremoto|inund|nev|meteor|sequ|incendio|clima|geograf|tormenta|cicl|tsunami|erupci/i.test(t)?t:t+' geografía';
+ w.innerHTML='<h2>Resultados en internet</h2><div class="card"><p class="note">Buscando «'+esc(t)+'» en noticias en español…</p></div>';let h;
+ try{h=lis(await webnews(qq))}catch(e){h='<p class="note">No se pudo traer la lista aquí. Usa los enlaces.</p>'}
+ w.innerHTML='<h2>Resultados en internet</h2><div class="card">'+h+'<p class="lk"><a href="'+gn(qq)+'" target="_blank" rel="noopener">Todo en Google Noticias ↗</a> · <a href="https://www.google.com/search?q='+encodeURIComponent(qq)+'&hl=es" target="_blank" rel="noopener">Buscar en Google ↗</a> · <a href="#" onclick="$(\'#web\').innerHTML=\'\';return false">Cerrar ✕</a></p></div>'}
+function hecho(r,nom){const d=new Date(),seed=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5)+r.cca2.charCodeAt(0)+r.cca2.charCodeAt(1),b=(r.borders||[]).length,ar=r.area,rt=ar/1964375;
+ const F=[nom+' tiene '+n0(ar)+' km². '+(rt>=1?'¡Es '+n1(rt)+' veces más grande que México!':'Equivale al '+n1(rt*100)+'% de la superficie de México.'),
+ b?nom+' comparte frontera terrestre con '+b+(b>1?' países.':' país.'):nom+' no tiene fronteras terrestres: sus límites son el mar.',
+ r.landlocked?nom+' no tiene salida al mar (es un país sin litoral) y depende de sus vecinos para comerciar por barco.':nom+' tiene costas, por eso el mar influye en su clima, su comida y su economía.',
+ 'La capital de '+nom+' es '+(r.capital||['—'])[0]+', en '+cont(r.continents)+'.',
+ 'En '+nom+' viven '+n0(r.population)+' personas: unas '+n0(r.population/ar)+' por cada km².',
+ 'En '+nom+' se habla: '+idiomas(r.languages)+'.',
+ nom+' tiene '+(r.timezones||[]).length+' huso(s) horario(s) y su moneda es: '+monedas(r.currencies)+'.'];return F[seed%F.length]}
+let rot=0,wh=[];
+function ruleta(){const el=$('#rl');if(el.dataset.ok)return;el.dataset.ok=1;armar()}
+function armar(){wh=POOL.slice().sort(()=>Math.random()-.5).slice(0,12);const col=['#ef4444','#f59e0b','#facc15','#22c55e','#06b6d4','#6366f1'];
+ $('#rl').innerHTML='<div class="wr"><div class="pt">▼</div><div id="whl" style="background:conic-gradient('+wh.map((_,i)=>col[i%6]+' '+i*30+'deg '+(i+1)*30+'deg').join(',')+')">'+wh.map((c,i)=>'<span style="transform:translate(-50%,-50%) rotate('+(i*30+15)+'deg) translateY(-100px)">'+flag(c[0])+'</span>').join('')+'</div></div><button class="btn big" id="gi">¡Girar la ruleta!</button><div id="rr"></div>';
+ $('#gi').onclick=gira}
+function gira(){const b=$('#gi'),k=Math.floor(Math.random()*12);b.disabled=true;$('#rr').innerHTML='';
+ rot+=360*5+((360-(k*30+15))-(rot%360)+360)%360;$('#whl').style.transform='rotate('+rot+'deg)';
+ setTimeout(()=>{b.disabled=false;resultado(wh[k])},4700)}
+async function resultado(c){const el=$('#rr');el.innerHTML='<div class="sk"></div>';
+ try{const r=(await jget(RC+c[0]))[0];el.innerHTML='<div class="card"><img class="fl" src="'+u(r.flags&&r.flags.png)+'" alt="Bandera de '+esc(c[1])+'"><p><b style="font-size:20px">Te tocó: '+flag(c[0])+' '+esc(c[1])+'</b></p><p class="def">💡 <b>Dato curioso del día:</b> '+esc(hecho(r,c[1]))+'</p><div class="ac" style="padding:0 16px 12px"><button onclick="verPais(\''+c[0]+'\')">Ver información del país</button><button onclick="gira()">Girar otra vez</button></div></div>'}
+ catch(e){el.innerHTML='<p class="note">No se pudo cargar el dato. Intenta girar otra vez.</p>'}}
+const cut=(t,n)=>{t=(t||'').replace(/\s*\n+\s*/g,' ').trim();return t.length>n?t.slice(0,n).replace(/\s\S*$/,'')+'…':t};
+function wiki(t){const p=(t||'').split(/\n==+\s*([^=\n]+?)\s*==+\s*\n/),m={intro:p[0]};for(let i=1;i<p.length;i+=2)m[p[i]]=(m[p[i]]||'')+p[i+1];return m}
+const sec=(m,rx)=>{const k=Object.keys(m).find(k=>rx.test(k)&&m[k].trim().length>80);return k?cut(m[k],700):''};
+const wb=(cc,i)=>jget('https://api.worldbank.org/v2/country/'+cc+'/indicator/'+i+'?format=json&mrnev=1').then(j=>j[1]&&j[1][0]).catch(()=>null);
 async function pais(cc){const el=$('#pi');
- if(!cc){el.innerHTML='<p class="note">Cuando haya noticias con país, podrás ver aquí su información.</p>';return}
+ if(!cc){el.innerHTML='<p class="note">Elige un país.</p>';return}
  el.innerHTML='<div class="sk"></div><div class="sk"></div>';
- try{const r=(await jget('https://restcountries.com/v3.1/alpha/'+cc))[0],nom=(r.translations&&r.translations.spa&&r.translations.spa.common)||r.name.common;
-  let ex='',im='';
-  try{ex=(await jget('https://es.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(nom))).extract||''}catch(e){}
-  try{const w=await jget('https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=images&gimlimit=50&prop=imageinfo&iiprop=url&iiurlwidth=420&titles='+encodeURIComponent(nom));
-   im=Object.values(w.query.pages).filter(p=>p.imageinfo&&/\.jpe?g$/i.test(p.title)&&!/bandera|flag|escudo|mapa|map|locator|ubicaci|coat|logo|sello/i.test(p.title)).slice(0,10).map(p=>{const t=p.title.replace(/^[^:]+:/,'').replace(/\.jpe?g$/i,'').replace(/_/g,' ');return '<figure><img loading="lazy" src="'+u(p.imageinfo[0].thumburl)+'" alt="'+esc(t)+'"><figcaption>'+esc(t)+'</figcaption></figure>'}).join('')}catch(e){}
-  const R=(a,b)=>'<div class="row"><span>'+a+'</span><b>'+esc(b)+'</b></div>',ev=D.filter(x=>x.cc===cc);
-  el.innerHTML='<div class="card"><img class="fl" src="'+u(r.flags&&r.flags.png)+'" alt="Bandera de '+esc(nom)+'"><p><b style="font-size:20px">'+esc(nom)+'</b></p>'+(ex?'<p>'+esc(ex.length>650?ex.slice(0,650).replace(/\s\S*$/,'')+'…':ex)+'</p>':'')+
-  R('Capital',(r.capital||['—']).join(', '))+R('Continente',(r.continents||['—']).join(', '))+R('Subregión',r.subregion||'—')+R('Superficie',n0(r.area)+' km²')+R('Población',n0(r.population)+' habitantes')+R('Idiomas',r.languages?Object.values(r.languages).join(', '):'—')+R('Moneda',r.currencies?Object.values(r.currencies).map(m=>m.name).join(', '):'—')+R('Países vecinos',String((r.borders||[]).length))+R('Acceso al mar',r.landlocked?'No (sin litoral)':'Sí')+R('Zona horaria',(r.timezones||['—'])[0])+'</div>'+
-  (im?'<h2>Imágenes de '+esc(nom)+'</h2><div class="card"><div class="gal">'+im+'</div></div><p class="note">Imágenes: Wikipedia / Wikimedia Commons.</p>':'')+
+ try{const r=(await jget(RC+cc))[0],nom=(r.translations&&r.translations.spa&&r.translations.spa.common)||r.name.common,tn=encodeURIComponent(nom);
+  const [wk,bd,ig,g1,g2,g3,g4]=await Promise.all([
+   jget('https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&explaintext=1&redirects=1&titles='+tn).catch(()=>null),
+   r.borders&&r.borders.length?jget('https://restcountries.com/v3.1/alpha?codes='+r.borders.join(',')).catch(()=>[]):[],
+   jget('https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=images&gimlimit=50&prop=imageinfo&iiprop=url&iiurlwidth=420&redirects=1&titles='+tn).catch(()=>null),
+   wb(cc,'NY.GDP.MKTP.CD'),wb(cc,'NY.GDP.PCAP.CD'),wb(cc,'SP.DYN.LE00.IN'),wb(cc,'SP.URB.TOTL.IN.ZS')]);
+  const m=wiki(wk&&wk.query?Object.values(wk.query.pages)[0].extract:'');
+  const im=ig&&ig.query?Object.values(ig.query.pages).filter(p=>p.imageinfo&&/\.jpe?g$/i.test(p.title)&&!/bandera|flag|escudo|mapa|map|locator|ubicaci|coat|logo|sello/i.test(p.title)).slice(0,10).map(p=>{const t=p.title.replace(/^[^:]+:/,'').replace(/\.jpe?g$/i,'').replace(/_/g,' ');return '<figure><img loading="lazy" src="'+u(p.imageinfo[0].thumburl)+'" alt="'+esc(t)+'"><figcaption>'+esc(t)+'</figcaption></figure>'}).join(''):'';
+  const R=(a,b)=>b?'<div class="row"><span>'+a+'</span><b>'+esc(b)+'</b></div>':'',P=t=>t?'<p>'+esc(t)+'</p>':'',S=(t,b)=>'<div class="card sec"><h3>'+t+'</h3>'+b+'</div>';
+  const vecinos=(bd||[]).map(b=>(b.translations&&b.translations.spa&&b.translations.spa.common)||b.name.common).join(', ');
+  const gv=(g,f)=>g&&g.value!=null?f(g.value)+' ('+g.date+')':'';
+  const ev=D.filter(x=>x.cc===cc),q1=encodeURIComponent(nom);
+  el.innerHTML='<div class="card"><div class="duo"><img src="'+u(r.flags&&r.flags.png)+'" alt="Bandera de '+esc(nom)+'"><iframe loading="lazy" title="Mapa de '+esc(nom)+'" src="https://www.google.com/maps?q='+q1+'&z=4&output=embed"></iframe></div><p><b style="font-size:22px">'+esc(nom)+'</b> · <a href="https://www.google.com/maps/search/?api=1&query='+q1+'" target="_blank" rel="noopener">Abrir en Google Maps ↗</a></p></div>'+
+  S('📘 Información general',P(cut(m.intro,700))+R('Capital',(r.capital||[]).join(', '))+R('Continente',cont(r.continents))+R('Subregión',r.subregion)+R('Idiomas',idiomas(r.languages)))+
+  S('🧭 Geografía y límites',P(sec(m,/^(geograf|relieve|clima|territorio|medio)/i))+R('Superficie',n0(r.area)+' km²')+R('Coordenadas',r.latlng?r.latlng.map(v=>v.toFixed(1)+'°').join(', '):'')+R('Acceso al mar',r.landlocked?'No (sin litoral)':'Sí')+R('Países vecinos',vecinos||'Ninguno por tierra')+R('Zona horaria',(r.timezones||[])[0]))+
+  S('💰 Economía y sociedad',P(sec(m,/^(econom|demograf|poblaci|sociedad)/i))+R('Población',n0(r.population)+' habitantes')+R('Densidad',n0(r.population/r.area)+' hab/km²')+R('Moneda',monedas(r.currencies))+R('PIB',gv(g1,v=>'US$ '+n1(v/1e9)+' mil millones'))+R('PIB por habitante',gv(g2,v=>'US$ '+n0(v)))+R('Esperanza de vida',gv(g3,v=>n1(v)+' años'))+R('Población urbana',gv(g4,v=>n1(v)+'%')))+
+  S('🎭 Cultura y curiosidades',P(sec(m,/^(cultura|tradicion|gastronom|literatura|arte|fiestas|deporte)/i))+'<p class="def" style="margin:10px 16px">💡 '+esc(hecho(r,nom))+'</p>')+
+  (im?'<h2>Imágenes de '+esc(nom)+'</h2><div class="card"><div class="gal">'+im+'</div></div><p class="note">Imágenes: Wikipedia / Wikimedia Commons. Texto: Wikipedia, Banco Mundial y REST Countries.</p>':'')+
   (ev.length?'<h2>Sus noticias</h2>'+ev.map((x,i)=>card(x,i)).join(''):'')
  }catch(e){el.innerHTML='<p class="note">No se pudo cargar la información de este país.</p>'}}
 let ct=0;
-function goTab(i){const c=i<ct?'fl':'';ct=i;$$('.tab').forEach((b,j)=>b.classList.toggle('on',j===i));$$('.view').forEach((v,j)=>{v.classList.remove('on','fl');if(j===i)v.classList.add('on');if(j===i&&c)v.classList.add(c)});scrollTo(0,0);if(i===1)mapa();if(i===3)pais($('#sp').value)}
+function goTab(i){const c=i<ct?'fl':'';ct=i;$$('.tab').forEach((b,j)=>b.classList.toggle('on',j===i));$$('.view').forEach((v,j)=>{v.classList.remove('on','fl');if(j===i)v.classList.add('on');if(j===i&&c)v.classList.add(c)});scrollTo(0,0);if(i===1)mapa();if(i===3)pais($('#sp').value);if(i===4)ruleta()}
 $$('.tab').forEach((b,i)=>b.onclick=()=>goTab(i));
+$('#q').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur();buscaWeb()}};
 $('#q').oninput=e=>{q=e.target.value;if(ct!==0&&ct!==1)goTab(0);lista();pintar()};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-carga();
+selPais();carga();
 </script></body></html>
