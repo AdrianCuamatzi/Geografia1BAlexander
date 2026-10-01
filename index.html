@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Geo N68"><meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.png">
+<title>Noticias Geográficas</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--p:#4f46e5;--bg:#eef2ff;--tx:#1e1b4b;--mu:#64748b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 "Avenir Next",-apple-system,system-ui,sans-serif;padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#4f46e5,#06b6d4);padding-top:env(safe-area-inset-top);box-shadow:0 6px 20px rgba(79,70,229,.3)}
+.mq{overflow:hidden;white-space:nowrap;background:#fde047;color:var(--tx);font-weight:800;font-size:17px;padding:7px 0}
+.mq span{display:inline-block;padding-left:100%;animation:mq 18s linear infinite}
+@keyframes mq{to{transform:translateX(-100%)}}
+.sb{margin:10px 14px 12px;background:#fff;border-radius:26px;display:flex;align-items:center;gap:8px;padding:0 16px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.sb input{flex:1;border:0;outline:0;font:inherit;padding:12px 0;background:none;color:var(--tx);min-width:0}
+h2{margin:18px 16px 8px;font-size:22px}
+.view{display:none;padding-bottom:10px}.view.on{display:block;animation:inR .4s cubic-bezier(.2,.8,.2,1)}.view.on.fl{animation-name:inL}
+@keyframes inR{from{opacity:0;transform:translateX(40px)}}@keyframes inL{from{opacity:0;transform:translateX(-40px)}}
+.nw{display:flex;gap:12px;background:#fff;margin:0 14px 12px;padding:14px;border-radius:18px;border-left:6px solid var(--c);box-shadow:0 4px 14px rgba(79,70,229,.1);animation:up .5s both;animation-delay:calc(var(--i)*50ms)}
+@keyframes up{from{opacity:0;transform:translateY(16px)}}
+.ic{font-size:34px;line-height:1}.nw h3{font-size:16px;margin:0 0 4px}.nw h3 span{color:var(--c)}
+.mt{margin:0 0 8px;font-size:13px;color:var(--mu)}
+.ac{display:flex;gap:8px;flex-wrap:wrap}
+.ac a,.ac button,.pp button,.chip,.btn{font:inherit;font-size:14px;font-weight:700;border:0;border-radius:20px;padding:7px 14px;background:var(--p);color:#fff;text-decoration:none}
+.ac button,.pp button{background:#e0e7ff;color:var(--p)}
+.chip{margin:0 14px 8px;background:var(--tx)}
+.def{margin:0 16px 12px;padding:12px 14px;background:#fff7d6;border-radius:14px;font-size:14px}
+.note{color:var(--mu);margin:8px 16px;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 14px}
+.cat{border:0;border-radius:22px;padding:18px 10px;background:linear-gradient(145deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff));color:#fff;font:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 8px 18px rgba(0,0,0,.15);transition:transform .2s;animation:up .5s both;animation-delay:calc(var(--i)*60ms)}
+.cat:active{transform:scale(.94)}.cat span{font-size:44px}.cat b{font-size:15px}.cat small{opacity:.9}
+#mp{height:calc(100vh - 290px);min-height:320px;margin:0 14px;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(79,70,229,.2)}
+.pp ul{padding-left:16px;margin:6px 0}.pp li{margin-bottom:4px}
+select{font:inherit;font-weight:700;margin:0 14px 12px;padding:10px 14px;border-radius:14px;border:2px solid var(--p);background:#fff;color:var(--tx);width:calc(100% - 28px)}
+.card{background:#fff;margin:0 14px 14px;border-radius:20px;padding:6px 0;overflow:hidden;box-shadow:0 4px 14px rgba(79,70,229,.1);animation:up .5s both}
+.card>p{margin:10px 16px}.fl{width:100%;max-height:170px;object-fit:cover;display:block}
+.row{display:flex;justify-content:space-between;gap:12px;padding:9px 16px;border-top:1px solid #eef}.row b{text-align:right}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+figure{margin:0;border-radius:14px;overflow:hidden;background:#e0e7ff}figure img{width:100%;height:120px;object-fit:cover;display:block}
+figcaption{font-size:11px;padding:4px 8px;color:var(--mu)}
+.sk{height:84px;margin:0 14px 12px;border-radius:18px;background:linear-gradient(90deg,#e0e7ff,#fff,#e0e7ff);background-size:200%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200%}}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(255,255,255,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid #dde;padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:6}
+.tab{flex:1;border:0;background:none;font:inherit;font-size:11px;font-weight:700;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:1px}
+.tab i{font-style:normal;font-size:24px;transition:transform .3s cubic-bezier(.2,1.6,.4,1)}.tab.on{color:var(--p)}.tab.on i{transform:scale(1.25) translateY(-2px)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mq span{padding:0}.mq{white-space:normal;text-align:center}}
+</style></head><body>
+<header class="top"><div class="mq" role="heading" aria-level="1" aria-label="Mi tarea de Noticias Geográficas Secundaria N68 - 1B Alexander"><span>🌎 Mi tarea de Noticias Geográficas Secundaria N68 - 1B Alexander 🌋🌀🌍</span></div>
+<label class="sb">🔍<input id="q" type="search" placeholder="Buscar una noticia, país o fenómeno…" autocomplete="off"></label></header>
+<section class="view on" id="v0"><h2>Noticias por país</h2><div id="fl"></div><div id="ls"></div></section>
+<section class="view" id="v1"><h2>Mapa mundial</h2><div id="mp"></div><p class="note">Toca un punto para ver la noticia y su liga.</p></section>
+<section class="view" id="v2"><h2>Tipos de fenómenos</h2><div class="grid" id="ct"></div></section>
+<section class="view" id="v3"><h2>Conoce el país</h2><select id="sp"></select><div id="pi"></div></section>
+<nav><button class="tab on"><i>📰</i>Noticias</button><button class="tab"><i>🗺️</i>Mapa</button><button class="tab"><i>🧭</i>Tipos</button><button class="tab"><i>🌐</i>País</button></nav>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),u=s=>/^https?:\/\//.test(s||'')?esc(s):'#';
+const C=[['volcanes','🌋','Volcanes','#ef4444','Un volcán es una abertura de la corteza terrestre por donde salen magma, gases y ceniza. Muchos se ubican en el Cinturón de Fuego del Pacífico.'],['huracanes','🌀','Huracanes y tormentas','#0ea5e9','Los huracanes son ciclones tropicales: tormentas enormes que giran sobre mares cálidos. Se clasifican de la categoría 1 a la 5 (escala Saffir-Simpson).'],['terremotos','🌍','Terremotos','#f59e0b','Un terremoto es un movimiento brusco del suelo causado por el choque o roce de placas tectónicas. Se mide con la magnitud.'],['inundaciones','🌊','Inundaciones','#2563eb','Ocurren cuando el agua de ríos, lluvias o el mar cubre terrenos que normalmente están secos.'],['incendios','🔥','Incendios forestales','#f97316','Queman bosques y pastizales. El calor, la sequía y el viento los favorecen.'],['nieve','❄️','Nieve y hielo','#38bdf8','Las nevadas intensas y los cambios del hielo afectan el transporte, el campo y el clima.'],['sequia','🌡️','Sequía y clima extremo','#d97706','Falta prolongada de lluvia u olas extremas de calor y frío que afectan el agua y los cultivos.'],['deslizamientos','⛰️','Deslizamientos','#92400e','Es el movimiento de tierra y rocas por una ladera, por lluvias o sismos.'],['meteoritos','☄️','Meteoritos y bólidos','#7c3aed','Un meteoroide que entra a la atmósfera forma una bola de fuego (bólido). Si llega al suelo se llama meteorito.'],['otros','🌫️','Otros fenómenos','#64748b','Otros fenómenos naturales, como polvo y bruma en el aire o cambios de color del agua.']];
+const CM=Object.fromEntries(C.map(c=>[c[0],c]));
+const MP={volcanoes:'volcanes',severeStorms:'huracanes',floods:'inundaciones',wildfires:'incendios',snow:'nieve',seaLakeIce:'nieve',drought:'sequia',tempExtremes:'sequia',landslides:'deslizamientos',earthquakes:'terremotos'};
+const PRE={volcanes:'Actividad volcánica',huracanes:'Tormenta o huracán',inundaciones:'Inundación',incendios:'Incendio forestal',nieve:'Nieve y hielo',sequia:'Clima extremo',deslizamientos:'Deslizamiento',otros:'Fenómeno natural'};
+const jget=async x=>{const r=await fetch(x);if(!r.ok)throw new Error(r.status);return r.json()};
+const fecha=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'}),n0=x=>Math.round(x).toLocaleString('es-MX');
+let D=[],fc='',q='',M=null,capa=null,cur='';
+const GC={};
+async function geo(it){const k=it.lat.toFixed(1)+','+it.lon.toFixed(1);
+ if(!GC[k])GC[k]=jget('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+it.lat+'&longitude='+it.lon+'&localityLanguage=es').catch(()=>({}));
+ const g=await GC[k];it.pais=(g.countryName||'Aguas internacionales').replace(/\s*\((el|la|los|las)\)/i,'');it.cc=String(g.countryCode||'').replace(/[^A-Za-z]/g,'').toUpperCase()}
+async function pool(a,f,n=6){let i=0;await Promise.all(Array.from({length:n},async()=>{while(i<a.length){const x=a[i++];try{await f(x)}catch(e){}}}))}
+async function carga(){
+ $('#ls').innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div><p class="note">Buscando noticias de la NASA y el USGS…</p>';
+ const out=[];
+ await Promise.allSettled([
+ (async()=>{const j=await jget('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson');j.features.sort((a,b)=>b.properties.mag-a.properties.mag).slice(0,15).forEach(f=>{const p=f.properties,c=f.geometry.coordinates;out.push({cat:'terremotos',lat:c[1],lon:c[0],f:new Date(p.time),url:p.url,fuente:'USGS',titulo:'Tiembla con magnitud '+p.mag.toFixed(1)+' ('+p.place+')'})})})(),
+ (async()=>{const j=await jget('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=20&limit=150'),n={};j.events.forEach(e=>{const k=MP[e.categories[0].id]||'otros';if((n[k]=(n[k]||0)+1)>6)return;const g=e.geometry[e.geometry.length-1];let c=g.coordinates;while(Array.isArray(c[0]))c=c[0];out.push({cat:k,lat:c[1],lon:c[0],f:new Date(g.date),url:(e.sources&&e.sources[0]&&e.sources[0].url)||e.link,fuente:'NASA EONET',titulo:PRE[k]+': '+e.title+(g.magnitudeUnit==='kts'&&g.magnitudeValue?' (vientos de '+g.magnitudeValue+' nudos)':'')})})})(),
+ (async()=>{const j=await jget('https://ssd-api.jpl.nasa.gov/fireballs.api?limit=8'),ix=k=>j.fields.indexOf(k);j.data.forEach(r=>{const la=+r[ix('lat')]*(r[ix('lat-dir')]==='S'?-1:1),lo=+r[ix('lon')]*(r[ix('lon-dir')]==='W'?-1:1);if(isNaN(la+lo))return;out.push({cat:'meteoritos',lat:la,lon:lo,f:new Date(r[0].replace(' ','T')+'Z'),url:'https://cneos.jpl.nasa.gov/fireballs/',fuente:'NASA JPL',titulo:'Bola de fuego (bólido) detectada en la atmósfera, con energía radiada de '+r[ix('energy')]+' × 10¹⁰ julios'})})})()
+ ]);
+ if(!out.length){$('#ls').innerHTML='<p class="note">No se pudieron cargar las noticias. Revisa tu conexión.</p><button class="btn" style="margin:0 16px" onclick="carga()">Reintentar</button>';return}
+ await pool(out,geo);
+ D=out.sort((a,b)=>b.f-a.f);lista();cats();selPais();pintar();
+}
+const vis=()=>{const t=q.trim().toLowerCase();return D.filter(x=>(!fc||x.cat===fc)&&(!t||(x.titulo+' '+x.pais+' '+CM[x.cat][2]).toLowerCase().includes(t)))};
+function card(x,i){const c=CM[x.cat];return '<article class="nw" style="--c:'+c[3]+';--i:'+Math.min(i,12)+'"><div class="ic">'+c[1]+'</div><div><h3><span>'+(i+1)+'.</span> '+esc(x.pais)+': '+esc(x.titulo)+'</h3><p class="mt">'+c[2]+' · '+fecha(x.f)+' · '+esc(x.fuente)+'</p><div class="ac"><a href="'+u(x.url)+'" target="_blank" rel="noopener">Leer noticia ↗</a>'+(x.cc?'<button onclick="verPais(\''+x.cc+'\')">Ver país</button>':'')+'</div></div></article>'}
+function lista(){const a=vis();
+ $('#fl').innerHTML=fc?'<button class="chip" onclick="filtra(\'\')">'+CM[fc][1]+' '+CM[fc][2]+' ✕</button><p class="def">'+CM[fc][4]+'</p>':'';
+ $('#ls').innerHTML=a.length?a.map(card).join(''):'<p class="note">No hay noticias con esos criterios.</p>'}
+function cats(){$('#ct').innerHTML=C.map((c,i)=>'<button class="cat" style="--c:'+c[3]+';--i:'+i+'" onclick="filtra(\''+c[0]+'\')"><span>'+c[1]+'</span><b>'+c[2]+'</b><small>'+D.filter(x=>x.cat===c[0]).length+' noticias</small></button>').join('')}
+function filtra(k){fc=k;lista();pintar();goTab(0)}
+function pintar(){if(!M)return;capa.clearLayers();const g={};vis().forEach(x=>{(g[x.pais]=g[x.pais]||[]).push(x)});
+ Object.entries(g).forEach(([p,a])=>{const x=a[0];
+  L.circleMarker([x.lat,x.lon],{radius:9,color:'#fff',weight:2,fillColor:CM[x.cat][3],fillOpacity:.95}).bindPopup('<div class="pp"><b>'+esc(p)+'</b><ul>'+a.map(y=>'<li>'+CM[y.cat][1]+' <a href="'+u(y.url)+'" target="_blank" rel="noopener">'+esc(y.titulo)+'</a></li>').join('')+'</ul>'+(x.cc?'<button onclick="verPais(\''+x.cc+'\')">Ver información del país</button>':'')+'</div>',{maxWidth:260}).addTo(capa)})}
+function mapa(){if(typeof L==='undefined'){$('#mp').innerHTML='<p class="note">No se pudo cargar el mapa.</p>';return}
+ if(!M){M=L.map('mp',{worldCopyJump:true,minZoom:1}).setView([20,0],2);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:8}).addTo(M);capa=L.layerGroup().addTo(M)}
+ setTimeout(()=>M.invalidateSize(),60);pintar()}
+function selPais(){const m={};D.forEach(x=>{if(x.cc)m[x.cc]=x.pais});
+ $('#sp').innerHTML=Object.entries(m).sort((a,b)=>a[1].localeCompare(b[1],'es')).map(([c,n])=>'<option value="'+c+'">'+esc(n)+'</option>').join('');if(cur)$('#sp').value=cur}
+function verPais(cc){cur=cc;$('#sp').value=cc;goTab(3)}
+$('#sp').onchange=()=>{cur=$('#sp').value;pais(cur)};
+async function pais(cc){const el=$('#pi');
+ if(!cc){el.innerHTML='<p class="note">Cuando haya noticias con país, podrás ver aquí su información.</p>';return}
+ el.innerHTML='<div class="sk"></div><div class="sk"></div>';
+ try{const r=(await jget('https://restcountries.com/v3.1/alpha/'+cc))[0],nom=(r.translations&&r.translations.spa&&r.translations.spa.common)||r.name.common;
+  let ex='',im='';
+  try{ex=(await jget('https://es.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(nom))).extract||''}catch(e){}
+  try{const w=await jget('https://es.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=images&gimlimit=50&prop=imageinfo&iiprop=url&iiurlwidth=420&titles='+encodeURIComponent(nom));
+   im=Object.values(w.query.pages).filter(p=>p.imageinfo&&/\.jpe?g$/i.test(p.title)&&!/bandera|flag|escudo|mapa|map|locator|ubicaci|coat|logo|sello/i.test(p.title)).slice(0,10).map(p=>{const t=p.title.replace(/^[^:]+:/,'').replace(/\.jpe?g$/i,'').replace(/_/g,' ');return '<figure><img loading="lazy" src="'+u(p.imageinfo[0].thumburl)+'" alt="'+esc(t)+'"><figcaption>'+esc(t)+'</figcaption></figure>'}).join('')}catch(e){}
+  const R=(a,b)=>'<div class="row"><span>'+a+'</span><b>'+esc(b)+'</b></div>',ev=D.filter(x=>x.cc===cc);
+  el.innerHTML='<div class="card"><img class="fl" src="'+u(r.flags&&r.flags.png)+'" alt="Bandera de '+esc(nom)+'"><p><b style="font-size:20px">'+esc(nom)+'</b></p>'+(ex?'<p>'+esc(ex.length>650?ex.slice(0,650).replace(/\s\S*$/,'')+'…':ex)+'</p>':'')+
+  R('Capital',(r.capital||['—']).join(', '))+R('Continente',(r.continents||['—']).join(', '))+R('Subregión',r.subregion||'—')+R('Superficie',n0(r.area)+' km²')+R('Población',n0(r.population)+' habitantes')+R('Idiomas',r.languages?Object.values(r.languages).join(', '):'—')+R('Moneda',r.currencies?Object.values(r.currencies).map(m=>m.name).join(', '):'—')+R('Países vecinos',String((r.borders||[]).length))+R('Acceso al mar',r.landlocked?'No (sin litoral)':'Sí')+R('Zona horaria',(r.timezones||['—'])[0])+'</div>'+
+  (im?'<h2>Imágenes de '+esc(nom)+'</h2><div class="card"><div class="gal">'+im+'</div></div><p class="note">Imágenes: Wikipedia / Wikimedia Commons.</p>':'')+
+  (ev.length?'<h2>Sus noticias</h2>'+ev.map((x,i)=>card(x,i)).join(''):'')
+ }catch(e){el.innerHTML='<p class="note">No se pudo cargar la información de este país.</p>'}}
+let ct=0;
+function goTab(i){const c=i<ct?'fl':'';ct=i;$$('.tab').forEach((b,j)=>b.classList.toggle('on',j===i));$$('.view').forEach((v,j)=>{v.classList.remove('on','fl');if(j===i)v.classList.add('on');if(j===i&&c)v.classList.add(c)});scrollTo(0,0);if(i===1)mapa();if(i===3)pais($('#sp').value)}
+$$('.tab').forEach((b,i)=>b.onclick=()=>goTab(i));
+$('#q').oninput=e=>{q=e.target.value;if(ct!==0&&ct!==1)goTab(0);lista();pintar()};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+carga();
+</script></body></html>
